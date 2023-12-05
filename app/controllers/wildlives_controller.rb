@@ -6,7 +6,7 @@ class WildlivesController < ApplicationController
     def show
         wildlife = Wildlife.find(params[:id])
         if wildlife.valid?
-            render json: wildlife
+            render json: wildlife.to_json(include: :sightings)
         else
             render json: wildlife.errors
         end
