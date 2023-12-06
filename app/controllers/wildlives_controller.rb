@@ -1,4 +1,8 @@
 class WildlivesController < ApplicationController
+
+    rescue_from ActiveRecord::RecordInvalid, with: :render_unprocessable_entity_response
+    rescue_from ActiveRecord::RecordNotFound, with: :render_not_found_response
+
     def index
         wildlives = Wildlife.all
         render json: wildlives
@@ -13,12 +17,12 @@ class WildlivesController < ApplicationController
     end
     def create
         wildlife = Wildlife.create(wildlife_params)
-        if exact_math?(wildlife)
-            render json: { erors: ['Common name and Scientific Binomial cannot be the same.']}
-        elsif wildlife.valid?
+        if wildlife.valid?
             render json: wildlife
+        elsif exact_math?(wildlife)
+            render json: { erors: ['Common name and Scientific Binomial cannot be the same.']}
         else
-            render json: { errors: wildlife.errors.full_messages}, status: :unprocessable_entity
+            render json: wildlife.errors
         end
     end
     def update
@@ -26,6 +30,8 @@ class WildlivesController < ApplicationController
         wildlife.update(wildlife_params)
         if wildlife.valid?
             render json: wildlife
+        elsif exact_math?(wildlife)
+            render json: { erors: ['Common name and Scientific Binomial cannot be the same.']}
         else
             render json: wildlife.errors
         end
@@ -45,5 +51,11 @@ class WildlivesController < ApplicationController
     end
     def exact_math?(wildlife)
         wildlife.common_name == wildlife.scientific_binomial
+    end
+    def render_unprocessable_entity_response(exception)
+        render json: exception.record.errors, status: :unprocessable_entity
+    end
+    def render_not_found_response(exception)
+        render json: { error: exception.message }, status: :not_found
     end
 end

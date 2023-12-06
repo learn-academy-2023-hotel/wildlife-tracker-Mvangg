@@ -1,4 +1,9 @@
 class SightingsController < ApplicationController
+
+    rescue_from ActiveRecord::RecordInvalid, with: :render_unprocessable_entity_response
+    rescue_from ActiveRecord::RecordNotFound, with: :render_not_found_response
+ 
+ 
     def index
         sightings = Sighting.where(date: date_params[:start_date]..params[:end_date])
         render json: sightings
@@ -16,7 +21,7 @@ class SightingsController < ApplicationController
         if sighting.valid?
             render json: sighting
         else
-            render json: { errors: sighting.errors.full_messages}, status: :unprocessable_entity
+            render json: sighting.errors
         end
     end
     def update
@@ -44,5 +49,11 @@ class SightingsController < ApplicationController
     end
     def date_params
         params.permit(:start_date, :end_date)
+    end
+    def render_unprocessable_entity_response(exception)
+        render json: exception.record.errors, status: :unprocessable_entity
+    end
+    def render_not_found_response(exception)
+        render json: { error: exception.message }, status: :not_found
     end
 end
