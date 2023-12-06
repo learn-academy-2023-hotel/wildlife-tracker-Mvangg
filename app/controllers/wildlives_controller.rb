@@ -22,7 +22,7 @@ class WildlivesController < ApplicationController
         elsif exact_math?(wildlife)
             render json: { erors: ['Common name and Scientific Binomial cannot be the same.']}
         else
-            render json: wildlife.errors
+            render json: { errors: wildlife.errors.full_messages }, status: :unprocessable_entity
         end
     end
     def update
@@ -47,7 +47,7 @@ class WildlivesController < ApplicationController
 
     private
     def wildlife_params
-        params.require(:wildlife).permit(:common_name, :scientific_binomial)
+        params.require(:wildlife).permit(:common_name, :scientific_binomial, sightings_attributes: [:latitude, :longitude, :date])
     end
     def exact_math?(wildlife)
         wildlife.common_name == wildlife.scientific_binomial
